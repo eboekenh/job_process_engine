@@ -3,11 +3,30 @@ import express from 'express';
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
+const host = '127.0.0.1';
 const model = 'gemini-2.5-flash-preview-09-2025';
+
+const ALLOWED_LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+const isAllowedLocalUrl = (value) => {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return ALLOWED_LOCAL_HOSTS.has(parsed.hostname);
+  } catch {
+    return false;
+  }
+};
 
 app.use(express.json({ limit: '25mb' }));
 
 app.post('/api/gemini', async (req, res) => {
+  const origin = req.get('origin');
+  const referer = req.get('referer');
+  if (!isAllowedLocalUrl(origin) || !isAllowedLocalUrl(referer)) {
+    return res.status(403).json({ error: 'Localhost-only API access.' });
+  }
+
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'Missing GEMINI_API_KEY on server.' });
@@ -53,6 +72,6 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Gemini proxy listening on http://localhost:${port}`);
+app.listen(port, host, () => {
+  console.log(`Gemini proxy listening on http://${host}:${port}`);
 });
