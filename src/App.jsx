@@ -17,8 +17,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-const apiKey = '';
-
 const copyToClipboard = (text) => {
   const textArea = document.createElement('textarea');
   textArea.value = text;
@@ -97,33 +95,22 @@ const parseCSV = (text) => {
 
 const fetchWithBackoff = async (prompt, systemInstruction = '', fileData = null, retries = 5) => {
   const delays = [1000, 2000, 4000, 8000, 16000];
-  const parts = [{ text: prompt }];
-
-  if (fileData) {
-    parts.push({
-      inlineData: { mimeType: fileData.mimeType, data: fileData.base64 }
-    });
-  }
-
-  const payload = {
-    contents: [{ role: 'user', parts }],
-    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
-  };
 
   for (let i = 0; i <= retries; i++) {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }
-      );
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, systemInstruction, fileData })
+      });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${response.status}`);
+      }
+
       const data = await response.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      return data.text || '';
     } catch (error) {
       if (i === retries) throw error;
       await new Promise((res) => setTimeout(res, delays[i]));
