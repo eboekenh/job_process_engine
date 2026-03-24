@@ -1,6 +1,6 @@
 # 🚀 ApplyAuto — AI Job Application Automation Engine
 
-A full-stack application that uses Google's Gemini AI to automate job application tasks: CV analysis, job matching, cover letter generation, match scoring, and recruiter outreach messages.
+A full-stack application that uses Google's Gemini AI to automate job application tasks: CV analysis, job matching, and match scoring.
 
 ![React](https://img.shields.io/badge/React-18-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-Express_5-green)
